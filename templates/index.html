@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dog Kennel Reservation System</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: url('../static/dogbackground.jpeg') no-repeat center center fixed;
+        background-size: cover;
+        backdrop-filter: blur(5px);
+      }
+      
+      .container {
+        max-width: 600px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+      }
+      
+      h2 {
+        text-align: center;
+        color: #333;
+      }
+      
+      .form-group {
+        margin-bottom: 15px;
+      }
+      
+      .form-group label {
+        display: block;
+        font-weight: bold;
+      }
+      
+      .form-group input {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      
+      #reservationsTable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      
+      #reservationsTable th, #reservationsTable td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+      }
+      
+      #reservationsTable th {
+        background-color: #f4b400;
+        color: white;
+      }
+      
+      .btn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      
+      .btn:hover {
+        background-color: #45a049;
+      }
+      
+      .admin-btn {
+        background-color: #f44336;
+      }
+      
+      .admin-btn:hover {
+        background-color: #d32f2f;
+      }
+      
+      .sign-out-btn {
+        background-color: #d32f2f;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        float: right;
+      }
+      
+      .sign-out-btn:hover {
+        background-color: #b71c1c;
+      }
+      
+      .role-display {
+        text-align: center;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 10px;
+      }
+      
+      .confirmation-display {
+        text-align: center;
+        font-weight: bold;
+        color: #4CAF50;
+        margin-top: 10px;
+      }
+
+      .error-message {
+        color: red;
+        font-weight: bold;
+        text-align: center;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Login Page -->
+    <div class="container" id="loginPage">
+      <h2>Login to Dog Kennel Reservation System</h2>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter username">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter password" onkeypress="checkEnter(event)">
+      </div>
+      <button class="btn" onclick="login()">Login</button>
+      <button class="btn" onclick="showRegisterPage()">Register</button>
+    </div>
+    
+    <!-- Registration Page -->
+    <div class="container" id="registerPage" style="display: none;">
+      <h2>Create a New Account</h2>
+      <div class="form-group">
+        <label for="newUsername">Username</label>
+        <input type="text" id="newUsername" placeholder="Enter username">
+      </div>
+      <div class="form-group">
+        <label for="newPassword">Password</label>
+        <input type="password" id="newPassword" placeholder="Enter password">
+      </div>
+      <button class="btn" onclick="register()">Register</button>
+      <button class="btn" onclick="goToLogin()">Back to Login</button>
+      <div id="registerErrorMessage" class="error-message" style="display: none;"></div>
+    </div>
+
+    <!-- OTP Verification Page -->
+    <div class="container" id="otpPage" style="display: none;">
+      <h2>Two-Factor Authentication</h2>
+      <p>A one-time password (OTP) has been sent to your email (for this example, it will display here).</p>
+      <p><strong>OTP:</strong> <span id="generatedOtp"></span></p>
+      <div class="form-group">
+        <label for="otp">Enter OTP</label>
+        <input type="text" id="otp" placeholder="Enter the OTP" onkeypress="checkOtpEnter(event)">
+      </div>
+      <button class="btn" onclick="verifyOtp()">Verify OTP</button>
+    </div>
+    
+    <!-- Reservation Page -->
+    <div class="container" id="reservationPage" style="display: none;">
+      <h2>Dog Kennel Reservation System</h2>
+      <div class="role-display" id="roleDisplay"></div>
+      <button class="sign-out-btn" onclick="signOut()">Sign Out</button>
+      <div class="form-group">
+        <label for="dogName">Dog's Name</label>
+        <input type="text" id="dogName" placeholder="Enter dog's name">
+      </div>
+      <div class="form-group">
+        <label for="ownerName">Owner's Name</label>
+        <input type="text" id="ownerName" placeholder="Enter owner's name">
+      </div>
+      <div class="form-group">
+        <label for="breed">Breed</label>
+        <input type="text" id="breed" placeholder="Enter breed">
+      </div>
+      <div class="form-group">
+        <label for="age">Age</label>
+        <input type="number" id="age" placeholder="Enter age in years">
+      </div>
+      <div class="form-group">
+        <label for="specialReq">Special Requirements</label>
+        <input type="text" id="specialReq" placeholder="Enter any special requirements">
+      </div>
+      <div class="form-group">
+        <label for="date">Reservation Date</label>
+        <input type="date" id="date">
+      </div>
+      <button class="btn" onclick="addReservation()">Add Reservation</button>
+      
+      <div id="confirmationDisplay" class="confirmation-display" style="display: none;"></div>
+      
+      <table id="reservationsTable">
+        <thead>
+          <tr>
+            <th>Confirmation #</th>
+            <th>Dog's Name</th>
+            <th>Owner's Name</th>
+            <th>Breed</th>
+            <th>Age</th>
+            <th>Special Requirements</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="reservationList">
+          <!-- Reservation rows will be added here dynamically -->
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="container" id="statusPage" style="display: none;">
+      <h2>Dog Status Updates</h2>
+      <p id="statusMessage">Loading...</p>
+      <button class="btn" onclick="goBack()">Go Back</button>
+    </div>
+    
+    <script>
+      const users = [
+        { username: "admin", password: "adminpass", role: "admin" },
+        { username: "user", password: "userpass", role: "user" },
+      ];
+      
+      function checkEnter(event) {
+        if (event.key === "Enter") {
+          login();
+        }
+      }
+      
+      function login() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `username=${username}&password=${password}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert("Login successful, role: " + data.role);
+                initiateOtp();
+            } else {
+                alert(data.message);
+            }
+        });
+      }
+
+      
+      function initiateOtp() {
+        generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        document.getElementById("generatedOtp").textContent = generatedOtp;
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("otpPage").style.display = "block";
+      }
+
+      function showRegisterPage() {
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("registerPage").style.display = "block";
+        document.getElementById("registerErrorMessage").style.display = "none";
+      }
+
+      function goToLogin() {
+        document.getElementById("registerPage").style.display = "none";
+        document.getElementById("loginPage").style.display = "block";
+      }
+
+      function register() {
+        const newUsername = document.getElementById("newUsername").value;
+        const newPassword = document.getElementById("newPassword").value;
+
+        fetch('/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `newUsername=${newUsername}&newPassword=${newPassword}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(data.message);
+                goToLogin();
+            } else {
+                alert(data.message);
+            }
+        });
+      }
+
+
+      function checkOtpEnter(event) {
+        if (event.key === "Enter") {
+          verifyOtp();
+        }
+      }
+
+      function verifyOtp() {
+        const enteredOtp = document.getElementById("otp").value;
+        if (enteredOtp === generatedOtp) {
+          alert("OTP verification successful!");
+          document.getElementById("otpPage").style.display = "none";
+          showReservationPage();
+        } else {
+          alert("Incorrect OTP. Please try again.");
+        }
+      }
+
+      function showReservationPage() {
+        document.getElementById("reservationPage").style.display = "block";
+        document.getElementById("roleDisplay").textContent = `Logged in as ${userRole.charAt(0).toUpperCase() + userRole.slice(1)}`;
+        displayReservations();
+      }
+      
+      function signOut() {
+        userRole = "";  
+        generatedOtp = ""; 
+        document.getElementById("username").value = ""; 
+        document.getElementById("password").value = ""; 
+        document.getElementById("otp").value = ""; 
+        document.getElementById("reservationPage").style.display = "none";
+        document.getElementById("otpPage").style.display = "none";
+        document.getElementById("statusPage").style.display = "none";
+        document.getElementById("loginPage").style.display = "block"; 
+        alert("You have been signed out.");
+      }
+      
+      const reservations = [];
+      
+      function addReservation() {
+        const dogName = document.getElementById("dogName").value;
+        const ownerName = document.getElementById("ownerName").value;
+        const breed = document.getElementById("breed").value;
+        const age = document.getElementById("age").value;
+        const specialReq = document.getElementById("specialReq").value;
+        const date = document.getElementById("date").value;
+
+        fetch('/add_reservation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `dogName=${dogName}&ownerName=${ownerName}&breed=${breed}&age=${age}&specialReq=${specialReq}&date=${date}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert("Reservation successful. Confirmation number: " + data.confirmationNumber);
+            } else {
+                alert("Error: " + data.message);
+            }
+        });
+      }
+
+      
+      function displayReservations() {
+        const reservationList = document.getElementById("reservationList");
+        reservationList.innerHTML = ""; 
+        
+        reservations.forEach((reservation, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+          <td>${reservation.confirmationNumber}</td>
+          <td>${reservation.dogName}</td>
+          <td>${reservation.ownerName}</td>
+          <td>${reservation.breed}</td>
+          <td>${reservation.age}</td>
+          <td>${reservation.specialReq}</td>
+          <td>${reservation.date}</td>
+          <td>
+            ${userRole === "admin" ? `<button class="btn admin-btn" onclick="updateStatus(${index})">Update Status</button>` : ""}
+            ${userRole === "user" ? `<button class="btn" onclick="checkStatus(${index})">Check Status</button>` : ""}
+          </td>
+        `;
+          reservationList.appendChild(row);
+        });
+      }
+      
+      function updateStatus(index) {
+        const newStatus = prompt("Enter the new status for the dog:");
+        if (newStatus) {
+          reservations[index].status = newStatus;
+          alert("Status updated!");
+        }
+      }
+      
+      function checkStatus(index) {
+        const statusMessage = reservations[index].status;
+        document.getElementById("statusMessage").textContent = statusMessage;
+        document.getElementById("reservationPage").style.display = "none";
+        document.getElementById("statusPage").style.display = "block";
+      }
+      
+      function goBack() {
+        document.getElementById("statusPage").style.display = "none";
+        document.getElementById("reservationPage").style.display = "block";
+      }
+    </script>
+  </body>
+</html>
